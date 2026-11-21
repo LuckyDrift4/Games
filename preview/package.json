@@ -1,0 +1,8 @@
+{
+  "name": "studmap-preview",
+  "private": true,
+  "description": "three.js preview renderer for studmap maps (screenshots via Playwright)",
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}
