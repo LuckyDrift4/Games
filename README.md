@@ -6,7 +6,7 @@ Three original Roblox maps built from plain Parts by a small Python generator (`
 |---|---|---|---|
 | **Harvest Hollow**: 6 fenced farm plots round a hex market plaza in a canyon bowl | studs | 3,597 | `out/harvest_hollow/HarvestHollow.rbxmx` |
 | **Sky Sprint**: floating islands with a hub and a long runway through Meadow, Golden Fields and Frost zones | studs | 2,881 | `out/sky_sprint/SkySprint.rbxmx` |
-| **Plot Isles**: 8 identical plot islands (8 pads + conveyor each) on a main road in the sea | smooth | 1,673 | `out/plot_isles/PlotIsles.rbxmx` |
+| **Plot Isles**: 8 identical plot islands on a main road in a see-through tropical sea. Each plot has a laser-lock gate, an owner board, 8 pedestal pads with collect buttons, a conveyor with a spawn portal and exit tunnel, tiki torches, palms and beach props. The spawn hub has a lighthouse, coin fountain, Shop / Index / Rebirth huts and leaderboards | studs + smooth props | 14,659 | `out/plot_isles/PlotIsles.rbxmx` |
 
 ![Harvest Hollow](out/harvest_hollow/previews/overview.jpg)
 ![Sky Sprint](out/sky_sprint/previews/overview.jpg)
@@ -33,7 +33,7 @@ L.EnvironmentDiffuseScale = 0.6
 L.EnvironmentSpecularScale = 0.2
 ```
 
-Stud maps use Plastic with the **Studs** surface on every face. Plot Isles uses SmoothPlastic. Signs are blank boards,
+Stud parts use Plastic with the **Studs** surface on every face; round and organic props (palms, flowers, boats) use SmoothPlastic. Signs are blank boards,
 so add text with a SurfaceGui. Each map is Parts only: no meshes, no uploads and no asset ids.
 
 The files have not been opened in Studio yet; they were checked by parsing the XML and validating every Part
