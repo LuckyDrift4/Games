@@ -1,5 +1,6 @@
 -- Court rules and geometry in court space (see Config). Shared by server (rules) and clients (prediction, camera).
 local Config = require(script.Parent.Config)
+local AnimData = require(script.Parent.AnimData)
 
 local Court = {}
 local C = Config.Court
@@ -76,20 +77,38 @@ function Court.strokeFor(side, hitterPos, ball, bounced)
 	return relRight >= -0.4 and "Forehand" or "Backhand"
 end
 
--- the point on the hitter's body where the racket meets the ball for a stroke (court space)
+-- the point where the racket meets the ball for a stroke (court space), straight from the animation: AnimData
+-- stores it relative to the HumanoidRootPart (x right, y up from the hip centre, z back), and the HRP stands 3 studs
+-- above the court facing the net
+local CONTACT = {}
+for name, clip in pairs(AnimData.Clips) do
+	if clip.ContactPoint then
+		CONTACT[name] = Vector3.new(table.unpack(clip.ContactPoint))
+	end
+end
+Court.Contact = CONTACT
+
 function Court.contactPoint(side, hitterPos, stroke)
+	local c = CONTACT[stroke] or CONTACT.Forehand
 	local f, r = Court.facing(side), Court.rightOf(side)
 	local base = Vector3.new(hitterPos.X, 0, hitterPos.Z)
-	if stroke == "Backhand" then
-		return base - r * 2.6 + f * 0.8 + Vector3.new(0, 2.6, 0)
-	elseif stroke == "VolleyForehand" then
-		return base + r * 2.2 + f * 1.8 + Vector3.new(0, 4.0, 0)
-	elseif stroke == "VolleyBackhand" then
-		return base - r * 2.2 + f * 1.8 + Vector3.new(0, 4.0, 0)
-	elseif stroke == "Smash" or stroke == "Serve" then
-		return base + r * 0.6 + f * 0.6 + Vector3.new(0, 8.2, 0)
+	return base + r * c.X + f * -c.Z + Vector3.new(0, 3 + c.Y, 0)
+end
+
+-- the serve toss: where the ball leaves the hand (court space) and the velocity that brings it to the racket at
+-- the contact moment of the Serve animation
+function Court.serveToss(side, serverPos)
+	local clip = AnimData.Clips.Serve
+	local f, r = Court.facing(side), Court.rightOf(side)
+	local base = Vector3.new(serverPos.X, 0, serverPos.Z)
+	local function place(p)
+		return base + r * p[1] + f * -p[3] + Vector3.new(0, 3 + p[2], 0)
 	end
-	return base + r * 2.8 + f * 0.8 + Vector3.new(0, 2.6, 0)
+	local from, to = place(clip.TossPoint), place(clip.ContactPoint)
+	local T = clip.Contact - clip.Toss
+	local g = Config.Ball.Gravity
+	local v = (to - from) / T + Vector3.new(0, 0.5 * g * T, 0)
+	return from, v, T
 end
 
 return Court

@@ -2,11 +2,8 @@
 exporters. Roblox space: X right, Y up, Z back (a character faces -Z).
 
 Joints are the six R6 Motor6Ds plus W, a "RacketGrip" Motor6D from the Right Arm to the racket that works as the
-wrist. Sampling eases each segment and slerps rotations exactly like CFrame:Lerp, so what the preview shows is what
-the Roblox runtime plays."""
+wrist. Poses are solved in rig.py; lerp_cf matches CFrame:Lerp so the baked frames play the same in Roblox."""
 import math
-
-from clips import CLIPS
 
 
 def mat(R=((1, 0, 0), (0, 1, 0), (0, 0, 1)), p=(0, 0, 0)):
@@ -149,46 +146,6 @@ def lerp_cf(A, B, u):
     q = tuple(c / n for c in q)
     p = tuple(A[i][3] + (B[i][3] - A[i][3]) * u for i in range(3))
     return from_quat(q, p)
-
-
-def char_to_arm(pose, d, f):
-    """racket direction / face given in character (HumanoidRootPart) space -> Right Arm space for this pose"""
-    mats = {j: joint_matrix(pose, j) for j in ORDER if j != 'W'}
-    mats['W'] = mat()
-    A = solve(mats, mat())['Right Arm']
-    back = lambda v: tuple(sum(A[r][c] * v[r] for r in range(3)) for c in range(3))      # R^T v
-    return back(norm(d)), back(norm(f))
-
-
-def resolved_keys(name):
-    """keyframes with every joint filled in (a joint missing from a key keeps its previous value), as matrices.
-    W given as ('char', direction, face) is converted to the arm frame of that key"""
-    out, last = [], {}
-    for kf in CLIPS[name]['keys']:
-        pose = dict(last)
-        pose.update(kf['pose'])
-        last = dict(pose)
-        if isinstance(pose.get('W'), tuple) and pose['W'] and pose['W'][0] == 'char':
-            pose['W'] = char_to_arm(pose, pose['W'][1], pose['W'][2])
-        out.append((kf['t'], kf['ease'], {j: joint_matrix(pose, j) for j in ORDER}))
-    return out
-
-
-_CACHE = {}
-
-
-def sample(name, t):
-    """joint -> Transform matrix at time t"""
-    if name not in _CACHE:
-        _CACHE[name] = resolved_keys(name)
-    keys = _CACHE[name]
-    clip = CLIPS[name]
-    t = t % clip['length'] if clip['loop'] else max(0.0, min(clip['length'], t))
-    for (ta, ea, A), (tb, _, B) in zip(keys, keys[1:]):
-        if ta <= t <= tb:
-            u = ease((t - ta) / max(1e-6, tb - ta), ea)
-            return {j: lerp_cf(A[j], B[j], u) for j in ORDER}
-    return dict(keys[-1][2])
 
 
 def solve(pose_mats, root=None):

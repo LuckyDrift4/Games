@@ -4,3 +4,5 @@ __pycache__/
 out/*/parts.json
 out/*/views.json
 game/build/
+game/anim/previews/_tmp/
+game/anim/previews/sheet_*.jpg

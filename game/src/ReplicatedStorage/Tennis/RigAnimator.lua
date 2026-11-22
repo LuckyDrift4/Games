@@ -1,5 +1,5 @@
--- Plays the tennis clips (AnimData, made in Blender) on an R6 character by writing Motor6D.Transform every frame,
--- so nothing has to be uploaded. A base loop (Idle / Run / Shuffle) runs underneath and one action (a stroke, the
+-- Plays the tennis clips (AnimData: posed with IK, previewed in Blender, baked at 30 fps) on an R6 character by
+-- writing Motor6D.Transform every frame, so nothing has to be uploaded. A base loop (Idle / Run / Shuffle) runs underneath and one action (a stroke, the
 -- serve, a celebration) plays on top with a short crossfade. Call :Step(dt) from RunService.Stepped, which runs after
 -- Roblox's own Animator, so these transforms win.
 local AnimData = require(script.Parent.AnimData)
@@ -24,34 +24,32 @@ for name, clip in pairs(AnimData.Clips) do
 end
 RigAnimator.Clips = CLIPS
 
-local function ease(u, kind)
-	u = math.clamp(u, 0, 1)
-	if kind == "linear" then
-		return u
-	elseif kind == "in" then
-		return u * u * u
-	elseif kind == "out" then
-		return 1 - (1 - u) ^ 3
-	end
-	return u * u * (3 - 2 * u)
-end
+local FPS = AnimData.Fps or 30
 
+-- frames are evenly spaced, so the two around time t are found directly; CFrame:Lerp slerps between them
 local function sample(clip, t, joint)
 	local keys = clip.keys
+	local n = #keys
 	if clip.loop then
 		t = t % clip.length
 	else
 		t = math.clamp(t, 0, clip.length)
 	end
-	for i = 1, #keys - 1 do
-		local a, b = keys[i], keys[i + 1]
-		if t <= b.t then
-			local u = ease((t - a.t) / math.max(1e-6, b.t - a.t), a.e)
-			return a.p[joint]:Lerp(b.p[joint], u)
+	local i = math.clamp(math.floor(t * FPS) + 1, 1, n)
+	local a = keys[i]
+	local b = keys[i + 1]
+	if not b then
+		if clip.loop then
+			b = keys[1]
+			local span = clip.length - a.t
+			return a.p[joint]:Lerp(b.p[joint], span > 1e-6 and math.clamp((t - a.t) / span, 0, 1) or 0)
 		end
+		return a.p[joint]
 	end
-	return keys[#keys].p[joint]
+	local span = b.t - a.t
+	return a.p[joint]:Lerp(b.p[joint], span > 1e-6 and math.clamp((t - a.t) / span, 0, 1) or 0)
 end
+RigAnimator.Sample = sample
 
 local function findMotors(character)
 	local torso = character:FindFirstChild("Torso")

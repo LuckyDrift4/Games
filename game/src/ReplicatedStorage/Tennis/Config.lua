@@ -46,9 +46,7 @@ Config.Bot = {
 }
 
 Config.Serve = {
-	HandHeight = 4.4,
-	TossPeakTime = 0.56, -- matches the Serve animation (toss 0.30 -> contact 0.86)
-	TossHeight = 11.2,
+	TossPeakTime = 0.56, -- toss -> contact in the Serve animation (0.30 -> 0.86); the ball flight comes from AnimData
 	PerfectWindow = 0.07, -- seconds around the top of the toss for a perfect serve
 	GoodWindow = 0.2, -- outside this the serve is a fault
 	MaxFaults = 2,
