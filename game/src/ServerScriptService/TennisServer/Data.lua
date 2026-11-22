@@ -1,5 +1,5 @@
--- Coins, wins and racket colours per player, saved with DataStoreService (falls back to memory in Studio when API
--- access is off). The client reads everything from player attributes: Coins, Wins, Equipped, Owned ("A,B,C").
+-- Cash, wins and racket colours per player, saved with DataStoreService (falls back to memory in Studio when API
+-- access is off). The client reads everything from player attributes: Cash, Wins, Equipped, Owned ("A,B,C").
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,7 +14,7 @@ end)
 local profiles = {}
 
 local function default()
-	return { Coins = 0, Wins = 0, Owned = { Classic = true }, Equipped = "Classic" }
+	return { Cash = 0, Wins = 0, Owned = { Classic = true }, Equipped = "Classic" }
 end
 
 local function shopItem(id)
@@ -36,13 +36,13 @@ local function publish(player)
 	for id in pairs(p.Owned) do
 		table.insert(owned, id)
 	end
-	player:SetAttribute("Coins", p.Coins)
+	player:SetAttribute("Cash", p.Cash)
 	player:SetAttribute("Wins", p.Wins)
 	player:SetAttribute("Equipped", p.Equipped)
 	player:SetAttribute("Owned", table.concat(owned, ","))
 	local ls = player:FindFirstChild("leaderstats")
 	if ls then
-		ls.Coins.Value = p.Coins
+		ls.Cash.Value = p.Cash
 		ls.Wins.Value = p.Wins
 	end
 end
@@ -59,7 +59,7 @@ function Data.load(player)
 	end
 	local p = default()
 	if type(saved) == "table" then
-		p.Coins = tonumber(saved.Coins) or 0
+		p.Cash = tonumber(saved.Cash) or tonumber(saved.Coins) or 0 -- older saves called it Coins
 		p.Wins = tonumber(saved.Wins) or 0
 		if type(saved.Owned) == "table" then
 			for id in pairs(saved.Owned) do
@@ -75,9 +75,9 @@ function Data.load(player)
 	profiles[player] = p
 	local ls = Instance.new("Folder")
 	ls.Name = "leaderstats"
-	local coins = Instance.new("IntValue")
-	coins.Name = "Coins"
-	coins.Parent = ls
+	local cash = Instance.new("IntValue")
+	cash.Name = "Cash"
+	cash.Parent = ls
 	local wins = Instance.new("IntValue")
 	wins.Name = "Wins"
 	wins.Parent = ls
@@ -91,7 +91,7 @@ function Data.save(player)
 		return
 	end
 	pcall(function()
-		store:SetAsync("u" .. player.UserId, p)
+		store:SetAsync("u" .. player.UserId, { Cash = p.Cash, Wins = p.Wins, Owned = p.Owned, Equipped = p.Equipped })
 	end)
 end
 
@@ -99,10 +99,10 @@ function Data.get(player)
 	return profiles[player]
 end
 
-function Data.addCoins(player, n)
+function Data.addCash(player, n)
 	local p = profiles[player]
 	if p then
-		p.Coins += n
+		p.Cash += n
 		publish(player)
 	end
 end
@@ -126,10 +126,10 @@ function Data.buy(player, id)
 		publish(player)
 		return true, "Equipped"
 	end
-	if p.Coins < item.Price then
-		return false, "Not enough coins"
+	if p.Cash < item.Price then
+		return false, "Not enough cash"
 	end
-	p.Coins -= item.Price
+	p.Cash -= item.Price
 	p.Owned[id] = true
 	p.Equipped = id
 	publish(player)

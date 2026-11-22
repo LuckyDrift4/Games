@@ -1,11 +1,13 @@
 -- The tennis HUD: big colourful buttons that work with touch, mouse and gamepad. HIT button, scoreboard, banners,
--- serve timing meter, coins, the racket shop and the end-of-match card.
+-- serve timing meter, cash and wins, the racket shop and the end-of-match card. Icons come from the FOLK icon pack
+-- (see Tennis.Icons); until they are uploaded the HUD draws simple shapes instead.
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Tennis"):WaitForChild("Config"))
+local Icons = require(ReplicatedStorage:WaitForChild("Tennis"):WaitForChild("Icons"))
 
 local UI = {}
 local player = Players.LocalPlayer
@@ -62,6 +64,33 @@ local function label(parent, text, size, pos, color, anchor)
 	return l
 end
 
+-- an icon from the pack; returns nil when it has not been uploaded yet
+local function icon(parent, name, size, pos, anchor)
+	local id = Icons.get(name)
+	if not id then
+		return nil
+	end
+	local im = Instance.new("ImageLabel")
+	im.Name = name .. "Icon"
+	im.BackgroundTransparency = 1
+	im.Image = id
+	im.ScaleType = Enum.ScaleType.Fit
+	im.Size = size
+	im.Position = pos or UDim2.new()
+	im.AnchorPoint = anchor or Vector2.zero
+	im.ZIndex = 3
+	im.Parent = parent
+	return im
+end
+UI.icon = icon
+
+local function money(n)
+	local s = tostring(math.floor(n or 0))
+	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return "$" .. out:gsub("^,", "")
+end
+UI.money = money
+
 -- a big chunky button: colour, darker bottom edge, bounces when pressed
 local function button(parent, text, color, size, pos, anchor)
 	local b = Instance.new("TextButton")
@@ -104,26 +133,51 @@ function UI.build()
 	gui.Parent = player:WaitForChild("PlayerGui")
 	UI.gui = gui
 
-	-- coins + shop (top left, under the Roblox top bar)
-	local coins = Instance.new("Frame")
-	coins.Size = UDim2.fromOffset(190, 54)
-	coins.Position = UDim2.fromOffset(14, 64)
-	coins.BackgroundColor3 = NAVY
-	coins.BackgroundTransparency = 0.15
-	coins.Parent = gui
-	corner(coins, 14)
-	stroke(coins, 3, YELLOW)
-	local coin = Instance.new("Frame")
-	coin.Size = UDim2.fromOffset(34, 34)
-	coin.Position = UDim2.fromOffset(10, 10)
-	coin.BackgroundColor3 = YELLOW
-	coin.Parent = coins
-	corner(coin, 17)
-	stroke(coin, 2, Color3.fromRGB(180, 120, 0))
-	UI.coins = label(coins, "0", UDim2.fromOffset(130, 38), UDim2.fromOffset(52, 8), YELLOW)
-	UI.coins.TextXAlignment = Enum.TextXAlignment.Left
-	UI.shopButton = button(gui, "SHOP", PINK, UDim2.fromOffset(190, 58), UDim2.fromOffset(14, 126))
-	UI.shopButton.Name = "ShopButton"
+	-- cash, wins and the shop (top left, under the Roblox top bar)
+	local cash = Instance.new("Frame")
+	cash.Name = "Cash"
+	cash.Size = UDim2.fromOffset(210, 58)
+	cash.Position = UDim2.fromOffset(14, 64)
+	cash.BackgroundColor3 = NAVY
+	cash.BackgroundTransparency = 0.15
+	cash.Parent = gui
+	corner(cash, 16)
+	stroke(cash, 3, GREEN)
+	if not icon(cash, "Cash", UDim2.fromOffset(62, 62), UDim2.fromOffset(-10, -4)) then
+		local bill = Instance.new("Frame")
+		bill.Size = UDim2.fromOffset(40, 26)
+		bill.Position = UDim2.fromOffset(10, 16)
+		bill.BackgroundColor3 = GREEN
+		bill.Parent = cash
+		corner(bill, 6)
+		stroke(bill, 2, Color3.fromRGB(20, 110, 40))
+		label(bill, "$", UDim2.fromScale(1, 1), UDim2.new(), WHITE)
+	end
+	UI.cash = label(cash, "$0", UDim2.fromOffset(146, 40), UDim2.fromOffset(58, 9), GREEN)
+	UI.cash.TextXAlignment = Enum.TextXAlignment.Left
+
+	local wins = Instance.new("Frame")
+	wins.Name = "Wins"
+	wins.Size = UDim2.fromOffset(130, 50)
+	wins.Position = UDim2.fromOffset(14, 128)
+	wins.BackgroundColor3 = NAVY
+	wins.BackgroundTransparency = 0.15
+	wins.Parent = gui
+	corner(wins, 14)
+	stroke(wins, 3, YELLOW)
+	if not icon(wins, "Trophy", UDim2.fromOffset(52, 52), UDim2.fromOffset(-6, -2)) then
+		label(wins, "W", UDim2.fromOffset(34, 34), UDim2.fromOffset(8, 8), YELLOW)
+	end
+	UI.wins = label(wins, "0", UDim2.fromOffset(70, 34), UDim2.fromOffset(50, 8), YELLOW)
+	UI.wins.TextXAlignment = Enum.TextXAlignment.Left
+
+	local shopB, shopL = button(gui, "SHOP", PINK, UDim2.fromOffset(170, 62), UDim2.fromOffset(14, 186))
+	shopB.Name = "ShopButton"
+	if icon(shopB, "Shop", UDim2.fromOffset(70, 70), UDim2.new(0, -14, 0.5, 0), Vector2.new(0, 0.5)) then
+		shopL.Size = UDim2.fromScale(0.6, 0.62)
+		shopL.Position = UDim2.fromScale(0.62, 0.5)
+	end
+	UI.shopButton = shopB
 
 	-- scoreboard (top centre)
 	local sb = Instance.new("Frame")
@@ -170,6 +224,10 @@ function UI.build()
 	UI.hitLabel = hitLabel
 	local key = label(hit, "SPACE", UDim2.fromOffset(110, 22), UDim2.new(0.5, 0, 1, 10), WHITE, Vector2.new(0.5, 0))
 	UI.hitKey = key
+	UI.hitKeyIcons = {
+		keyboard = icon(hit, "KeySpace", UDim2.fromOffset(96, 44), UDim2.new(0.5, 0, 1, 4), Vector2.new(0.5, 0)),
+		gamepad = icon(hit, "KeyX", UDim2.fromOffset(44, 44), UDim2.new(0.5, 0, 1, 4), Vector2.new(0.5, 0)),
+	}
 	hit.Visible = false
 
 	-- serve timing meter
@@ -201,7 +259,12 @@ function UI.build()
 	UI.meter = { frame = meter, good = good, perfect = perfect, needle = needle }
 
 	-- leave match
-	UI.leave = button(gui, "LEAVE", RED, UDim2.fromOffset(120, 44), UDim2.new(1, -14, 0, 64), Vector2.new(1, 0))
+	local leave, leaveL = button(gui, "LEAVE", RED, UDim2.fromOffset(140, 50), UDim2.new(1, -14, 0, 64), Vector2.new(1, 0))
+	if icon(leave, "Back", UDim2.fromOffset(40, 40), UDim2.new(0, 6, 0.5, 0), Vector2.new(0, 0.5)) then
+		leaveL.Size = UDim2.fromScale(0.62, 0.6)
+		leaveL.Position = UDim2.fromScale(0.62, 0.5)
+	end
+	UI.leave = leave
 	UI.leave.Visible = false
 
 	UI.buildShop()
@@ -217,7 +280,12 @@ function UI.setInputHint(kind)
 		return
 	end
 	UI.hitKey.Text = kind == "gamepad" and "R2 / X" or (kind == "touch" and "" or "SPACE / CLICK")
-	UI.hitKey.Visible = kind ~= "touch"
+	local icons = UI.hitKeyIcons or {}
+	local shown = icons[kind]
+	for k, im in pairs(icons) do
+		im.Visible = k == kind
+	end
+	UI.hitKey.Visible = kind ~= "touch" and not shown
 end
 
 function UI.setScore(s, mySide)
@@ -311,10 +379,24 @@ function UI.buildShop()
 	scale.Parent = panel
 	UI.shopScale = scale
 	label(panel, "RACKET SHOP", UDim2.new(0.7, 0, 0, 50), UDim2.new(0.5, 0, 0, 14), PINK, Vector2.new(0.5, 0))
-	local close = button(panel, "X", RED, UDim2.fromOffset(54, 54), UDim2.new(1, -12, 0, 12), Vector2.new(1, 0))
+	local close, closeL
+	local closeIcon = Icons.get("Close")
+	if closeIcon then
+		close = Instance.new("ImageButton")
+		close.BackgroundTransparency = 1
+		close.Image = closeIcon
+		close.Size = UDim2.fromOffset(62, 62)
+		close.Position = UDim2.new(1, 8, 0, -8)
+		close.AnchorPoint = Vector2.new(1, 0)
+		close.ZIndex = 5
+		close.Parent = panel
+	else
+		close, closeL = button(panel, "X", RED, UDim2.fromOffset(54, 54), UDim2.new(1, -12, 0, 12), Vector2.new(1, 0))
+	end
 	close.MouseButton1Click:Connect(function()
 		panel.Visible = false
 	end)
+	icon(panel, "Shop", UDim2.fromOffset(64, 64), UDim2.fromOffset(18, 8))
 	local grid = Instance.new("ScrollingFrame")
 	grid.Size = UDim2.new(1, -28, 1, -96)
 	grid.Position = UDim2.fromOffset(14, 82)
@@ -366,7 +448,7 @@ function UI.refreshShop()
 		owned[id] = true
 	end
 	local equipped = player:GetAttribute("Equipped") or "Classic"
-	local coins = player:GetAttribute("Coins") or 0
+	local cash = player:GetAttribute("Cash") or 0
 	for id, s in pairs(UI.shopItems) do
 		if equipped == id then
 			s.label.Text = "EQUIPPED"
@@ -375,8 +457,8 @@ function UI.refreshShop()
 			s.label.Text = "EQUIP"
 			s.button.BackgroundColor3 = GREEN
 		else
-			s.label.Text = s.item.Price .. " COINS"
-			s.button.BackgroundColor3 = coins >= s.item.Price and YELLOW or Color3.fromRGB(110, 110, 120)
+			s.label.Text = money(s.item.Price)
+			s.button.BackgroundColor3 = cash >= s.item.Price and YELLOW or Color3.fromRGB(110, 110, 120)
 		end
 	end
 	-- fit small screens
@@ -386,12 +468,13 @@ end
 
 function UI.watchData()
 	local function update()
-		UI.coins.Text = tostring(player:GetAttribute("Coins") or 0)
+		UI.cash.Text = money(player:GetAttribute("Cash") or 0)
+		UI.wins.Text = tostring(player:GetAttribute("Wins") or 0)
 		if UI.shop and UI.shop.Visible then
 			UI.refreshShop()
 		end
 	end
-	for _, a in ipairs({ "Coins", "Owned", "Equipped" }) do
+	for _, a in ipairs({ "Cash", "Wins", "Owned", "Equipped" }) do
 		player:GetAttributeChangedSignal(a):Connect(update)
 	end
 	update()
@@ -411,16 +494,21 @@ function UI.buildResult()
 	UI.resultStroke = stroke(card, 5, GREEN)
 	UI.resultTitle = label(card, "YOU WIN!", UDim2.new(0.9, 0, 0, 70), UDim2.new(0.5, 0, 0, 18), GREEN, Vector2.new(0.5, 0))
 	UI.resultScore = label(card, "", UDim2.new(0.8, 0, 0, 34), UDim2.new(0.5, 0, 0, 98), WHITE, Vector2.new(0.5, 0))
-	UI.resultCoins = label(card, "", UDim2.new(0.8, 0, 0, 40), UDim2.new(0.5, 0, 0, 148), YELLOW, Vector2.new(0.5, 0))
+	UI.resultCash = label(card, "", UDim2.new(0.6, 0, 0, 40), UDim2.new(0.5, 24, 0, 150), GREEN, Vector2.new(0.5, 0))
+	UI.resultBundle = icon(card, "CashBundle", UDim2.fromOffset(64, 64), UDim2.new(0.5, -120, 0, 138))
+	UI.resultCrown = icon(card, "Crown", UDim2.fromOffset(96, 96), UDim2.new(0.5, 0, 0, -62), Vector2.new(0.5, 0))
 	UI.result = card
 end
 
-function UI.showResult(won, scoreText, coins)
+function UI.showResult(won, scoreText, cash)
 	UI.resultTitle.Text = won and "YOU WIN!" or "YOU LOSE"
 	UI.resultTitle.TextColor3 = won and GREEN or RED
 	UI.resultStroke.Color = won and GREEN or RED
 	UI.resultScore.Text = scoreText
-	UI.resultCoins.Text = "+" .. tostring(coins or 0) .. " COINS"
+	UI.resultCash.Text = "+" .. money(cash or 0)
+	if UI.resultCrown then
+		UI.resultCrown.Visible = won
+	end
 	UI.result.Visible = true
 	UI.result.Size = UDim2.fromOffset(200, 110)
 	TweenService:Create(UI.result, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {

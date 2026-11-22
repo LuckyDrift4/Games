@@ -514,7 +514,7 @@ function Match:pointTo(side, reason)
 	self.points[side] += 1
 	local winner = self.players[side]
 	if winner.player then
-		self.ctx.data.addCoins(winner.player, Config.Rewards.PointWon)
+		self.ctx.data.addCash(winner.player, Config.Rewards.PointWon)
 	end
 	local gameWon = self.points[side] >= Config.Scoring.PointsToWinGame
 	if gameWon then
@@ -558,7 +558,7 @@ function Match:finish(winnerSide, forfeit)
 			if forfeit and not won then
 				amount = 0
 			end
-			self.ctx.data.addCoins(e.player, amount)
+			self.ctx.data.addCash(e.player, amount)
 			if won then
 				self.ctx.data.addWin(e.player)
 			end

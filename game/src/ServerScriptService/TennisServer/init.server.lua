@@ -1,4 +1,4 @@
--- Tennis server: courts, pads, matches (vs the bot or 1v1), coins and the racket shop.
+-- Tennis server: courts, pads, matches (vs the bot or 1v1), cash and the racket shop.
 --
 -- Each court is a Model in workspace.Courts with these parts (built by the map):
 --   Origin     centre of the net on the court surface; its LookVector points at side 2 (court space +Z = side 1)
@@ -29,6 +29,20 @@ Action.Parent = remotes
 remotes.Parent = ReplicatedStorage
 
 Data.start()
+
+-- the Blender-made stadium: if its models were imported but not built yet, build it now
+do
+	local ServerStorage = game:GetService("ServerStorage")
+	local install = ServerStorage:FindFirstChild("TennisStadiumInstall")
+	if install and not workspace:FindFirstChild("TennisStadium") then
+		local ok, err = pcall(function()
+			require(install).Install()
+		end)
+		if not ok then
+			warn("[TennisStadium] could not build the stadium: " .. tostring(err))
+		end
+	end
+end
 
 -- the bot and players don't bump into each other's rackets; players never collide with each other on court
 pcall(function()

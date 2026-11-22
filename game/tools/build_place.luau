@@ -73,12 +73,46 @@ end
 
 mount(SRC .. "/ReplicatedStorage", ReplicatedStorage)
 mount(SRC .. "/ServerScriptService", ServerScriptService)
+mount(SRC .. "/ServerStorage", ServerStorage)
+-- the Blender stadium's generated setup module (out/tennis_stadium_blender); its models are imported in Studio
+do
+	local p = ROOT .. "/out/tennis_stadium_blender/roblox/TennisStadiumSetup.lua"
+	if fs.isFile(p) then
+		scriptFor(p, "TennisStadiumSetup", "ModuleScript").Parent = ServerStorage
+	end
+end
 local sps = StarterPlayer:FindFirstChild("StarterPlayerScripts") or Instance.new("StarterPlayerScripts")
 sps.Parent = StarterPlayer
 mount(SRC .. "/StarterPlayer/StarterPlayerScripts", sps)
 
+-- icon slots: one ImageLabel per icon. In Studio, set each one's Image to the matching file from TennisIcons/
+-- (its File attribute says which). The HUD reads them through Tennis.Icons.
+local ICONS = {
+	{ "Cash", "Cash.png" },
+	{ "CashBundle", "CashBundle.png" },
+	{ "Shop", "Shop.png" },
+	{ "Trophy", "Trophy.png" },
+	{ "Crown", "Crown.png" },
+	{ "Close", "Close.png" },
+	{ "Back", "Back.png" },
+	{ "KeySpace", "KeySpace.png" },
+	{ "KeyX", "KeyX.png" },
+}
+local iconFolder = Instance.new("Folder")
+iconFolder.Name = "TennisIcons"
+for _, ic in ipairs(ICONS) do
+	local im = Instance.new("ImageLabel")
+	im.Name = ic[1]
+	im.Image = ""
+	im.Size = UDim2.fromOffset(100, 100)
+	im.BackgroundTransparency = 1
+	im:SetAttribute("File", ic[2])
+	im.Parent = iconFolder
+end
+iconFolder.Parent = ReplicatedStorage
+
 -- ---------------------------------------------------------------- the map
-local map = roblox.deserializeModel(fs.readFile(ROOT .. "/out/tennis_stadium/TennisStadium.rbxmx"))[1]
+local map = roblox.deserializeModel(fs.readFile(ROOT .. "/out/tennis_gameplay/TennisGameplay.rbxmx"))[1]
 local parts = 0
 for _, child in ipairs(map:GetChildren()) do
 	child.Parent = Workspace
