@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 out/*/parts.json
 out/*/views.json
+game/build/
