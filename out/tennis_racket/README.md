@@ -9,7 +9,7 @@ Made by [`models/tennis_racket/racket.py`](../../models/tennis_racket/racket.py)
 
 | File | What it is |
 |---|---|
-| `TennisRacket.glb` | the model: 13 parts, 3 studs long, about 58k triangles (every part under the 20k MeshPart limit) |
+| `TennisRacket.glb` | the model: 13 parts, 3 studs long, about 48k triangles (every part under the 20k MeshPart limit) |
 | `MakeRacketTool.lua` | command-bar script that turns the imported model into a Tool in StarterPack |
 | `previews/` | studio renders |
 

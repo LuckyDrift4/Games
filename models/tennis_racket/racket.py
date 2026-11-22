@@ -334,7 +334,7 @@ def build():
         zs = hits_v(x)
         top = max(zs)
         bot = max(z for z in zs if z < ZC)
-        zz = [bot - .005] + [z for z in [cross_z[0] + k * dz / 3 for k in range(-12, 3 * N_CROSSES + 12)]
+        zz = [bot - .005] + [z for z in [cross_z[0] + k * dz / 2 for k in range(-8, 2 * N_CROSSES + 8)]
                              if bot - .005 < z < top + .005] + [top + .005]
         pts = [(x, WEAVE * (-1) ** i * math.cos(math.pi * (z - cross_z[0]) / dz), z) for z in zz]
         tube(mains, pts, STRING_R, 6)
@@ -343,7 +343,7 @@ def build():
         xs = hits_h(z)
         right = min(v for v in xs if v > 0)
         left = max(v for v in xs if v < 0)
-        xx = [left - .005] + [x for x in [mains_x[0] + k * dx / 3 for k in range(-12, 3 * N_MAINS + 12)]
+        xx = [left - .005] + [x for x in [mains_x[0] + k * dx / 2 for k in range(-8, 2 * N_MAINS + 8)]
                               if left - .005 < x < right + .005] + [right + .005]
         pts = [(x, -WEAVE * (-1) ** j * math.cos(math.pi * (x - mains_x[0]) / dx), z) for x in xx]
         tube(crosses, pts, STRING_R, 6)
@@ -378,14 +378,14 @@ def build():
         nrm.append(Vector((t2.y, -t2.x)))
     grip = Mesh()
     rings = []
-    nz = int((GRIP_Z1 - GRIP_Z0) / .0012)
+    nz = int((GRIP_Z1 - GRIP_Z0) / .0017)
     for r in range(nz + 1):
         z = GRIP_Z0 + (GRIP_Z1 - GRIP_Z0) * r / nz
         ring = []
         for p, n in zip(base, nrm):
             th = math.atan2(p.y, p.x) / math.tau
             ph = ((z - GRIP_Z0) / .0215 + th) % 1.0
-            d = .0006 + .00075 * ph ** .8 - (.0009 if ph > .965 else 0)
+            d = .0005 + .0009 * ph ** 1.3
             ring.append(p + n * d)
         rings.append((ring, z))
     loft(grip, rings)
@@ -427,7 +427,7 @@ def tennis_ball(coll):
     bmesh.ops.create_icosphere(bm, subdivisions=5, radius=r)
     me = bpy.data.meshes.new('Ball'); bm.to_mesh(me); bm.free(); me.shade_smooth()
     m = bpy.data.materials.new('M_ball'); b = m.node_tree.nodes['Principled BSDF']
-    b.inputs['Base Color'].default_value = (.55, .78, .035, 1); b.inputs['Roughness'].default_value = .95
+    b.inputs['Base Color'].default_value = (.42, .72, .012, 1); b.inputs['Roughness'].default_value = .95
     b.inputs['Sheen Weight'].default_value = 1.0; b.inputs['Sheen Roughness'].default_value = .6
     b.inputs['Sheen Tint'].default_value = (.9, 1, .6, 1)
     nt = m.node_tree
@@ -467,17 +467,17 @@ def studio():
         M.f.append((rows[0][j], rows[1][j], rows[1][j + 1], rows[0][j + 1]))
     me = bpy.data.meshes.new('Sweep'); me.from_pydata(M.v, [], M.f); me.shade_smooth()
     m = bpy.data.materials.new('M_sweep'); b = m.node_tree.nodes['Principled BSDF']
-    b.inputs['Base Color'].default_value = (.42, .43, .45, 1); b.inputs['Roughness'].default_value = .55
+    b.inputs['Base Color'].default_value = (.16, .165, .175, 1); b.inputs['Roughness'].default_value = .6
     me.materials.append(m)
     coll.objects.link(bpy.data.objects.new('Sweep', me))
-    for name, loc, energy, size, col in (('Key', (-1.3, -1.6, 1.9), 520, 1.6, (1, .97, .92)),
-                                          ('Fill', (1.6, -1.3, .9), 160, 1.4, (.9, .95, 1)),
-                                          ('Rim', (.7, 1.3, 1.6), 380, 1.0, (1, 1, 1))):
+    for name, loc, energy, size, col in (('Key', (-1.3, -1.6, 1.9), 95, 1.4, (1, .97, .92)),
+                                          ('Fill', (1.6, -1.3, .9), 22, 1.6, (.9, .95, 1)),
+                                          ('Rim', (.7, 1.3, 1.6), 70, .8, (1, 1, 1))):
         L = bpy.data.lights.new(name, 'AREA'); L.energy = energy; L.size = size; L.color = col
         o = bpy.data.objects.new(name, L); coll.objects.link(o); o.location = loc
         o.rotation_euler = (Vector((0, 0, .35)) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
     w = bpy.data.worlds.new('W'); sc.world = w
-    w.node_tree.nodes['Background'].inputs[0].default_value = (.06, .065, .075, 1)
+    w.node_tree.nodes['Background'].inputs[0].default_value = (.025, .027, .032, 1)
     sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = 96; sc.cycles.use_denoising = True
     sc.view_settings.view_transform = 'AgX'
     try:
@@ -560,8 +560,8 @@ if 'norender' not in ARGS:
     lying = lambda yaw, x, y: Matrix.Translation((x, y, .0195)) @ Matrix.Rotation(math.radians(yaw), 4, 'Z') @ Matrix.Rotation(math.radians(-90), 4, 'X')
     upright = lambda yaw: Matrix.Rotation(math.radians(yaw), 4, 'Z')
     SHOTS = [
-        ('hero', dict(cam_loc=(.33, -.70, .74), target=(-.21, .12, .02), lens=50, pose=lying(28, -.05, -.18),
-                      ball=(.06, .05, .0335))),
+        ('hero', dict(cam_loc=(.56, .64, .74), target=(-.2, .13, .0), lens=40, pose=lying(28, -.05, -.18),
+                      ball=(.03, .33, .0335))),
         ('front', dict(cam_loc=(0, -2.95, .40), target=(0, 0, .35), lens=75, pose=upright(10))),
         ('angle', dict(cam_loc=(1.15, -2.55, .62), target=(0, 0, .35), lens=85, pose=upright(-38))),
         ('strings', dict(cam_loc=(.16, -.36, .5), target=(.0, .0, .43), lens=100, pose=upright(14), dof=3.2)),
