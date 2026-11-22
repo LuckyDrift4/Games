@@ -275,6 +275,8 @@ def build():
         if region == 'arm':
             u = (p.y - Z_SHAFT) / (Z_JUNCTION - Z_SHAFT)
             return profile(.0072 + .0004 * u, .0124)
+        if p.y < GRIP_Z1 + .004:                             # inside the grip: slimmer so no corner pokes through
+            return profile(.0060, .0102)
         return profile(.0072, .0122)
 
     def mat(label, region, t):
