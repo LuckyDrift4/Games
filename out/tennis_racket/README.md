@@ -5,6 +5,13 @@ It has a 16 x 19 string pattern woven over and under, grommets where every strin
 a throat bridge, a wound overgrip with finishing tape, a butt cap and a string dampener. The paint is gloss black with
 an electric-blue throat and sides and a silver pinstripe.
 
+![hero](previews/hero.jpg)
+
+| | |
+|---|---|
+| ![front](previews/front.jpg) | ![angle](previews/angle.jpg) |
+| ![strings](previews/strings.jpg) | ![grip](previews/grip.jpg) |
+
 Made by [`models/tennis_racket/racket.py`](../../models/tennis_racket/racket.py) (runs in Blender or with its `bpy` module).
 
 | File | What it is |
