@@ -30,11 +30,14 @@ remotes.Parent = ReplicatedStorage
 
 Data.start()
 
--- the Blender-made stadium: if its models were imported but not built yet, build it now
+-- the optional Blender-mesh stadium: if its models were imported but not built yet, build it now (the place already has
+-- the stadium made of Parts, so normally nothing happens here)
 do
 	local ServerStorage = game:GetService("ServerStorage")
 	local install = ServerStorage:FindFirstChild("TennisStadiumInstall")
-	if install and not workspace:FindFirstChild("TennisStadium") then
+	local kit = ServerStorage:FindFirstChild("TennisStadiumKit")
+	local imported = kit and #kit:GetChildren() > 0 or workspace:FindFirstChild("Stand_w20_0") ~= nil
+	if install and imported and not workspace:FindFirstChild("TennisStadium") then
 		local ok, err = pcall(function()
 			require(install).Install()
 		end)

@@ -2,6 +2,8 @@
 --   map      out/tennis_stadium/TennisStadium.rbxmx  (python3 tools/build.py tennis_stadium)
 --   scripts  game/src (Rojo layout: init.server.lua = Script, init.client.lua = LocalScript, *.lua = ModuleScript)
 --   anims    game/build/anims.json (python3 game/anim/export.py) -> KeyframeSequences for the Animation Editor
+--   stadium  out/tennis_stadium_parts/TennisStadiumParts.rbxmx (the Blender stadium as Parts, built from the private
+--            Blender build); without it the place gets plain fallback floors
 -- Writes out/tennis_game/TennisR6.rbxl.
 local fs = require("@lune/fs")
 local serde = require("@lune/serde")
@@ -116,6 +118,20 @@ local map = roblox.deserializeModel(fs.readFile(ROOT .. "/out/tennis_gameplay/Te
 local parts = 0
 for _, child in ipairs(map:GetChildren()) do
 	child.Parent = Workspace
+end
+-- the stadium itself, built from Parts (out/tennis_stadium_parts, made from the Blender design) so the place opens
+-- with everything in it; its own floors replace the plain fallback ones
+do
+	local p = ROOT .. "/out/tennis_stadium_parts/TennisStadiumParts.rbxmx"
+	if fs.isFile(p) then
+		local stadium = roblox.deserializeModel(fs.readFile(p))[1]
+		stadium.Parent = Workspace
+		local world = Workspace:FindFirstChild("World")
+		local fallback = world and world:FindFirstChild("Fallback")
+		if fallback then
+			fallback:Destroy()
+		end
+	end
 end
 for _, d in ipairs(Workspace:GetDescendants()) do
 	if d:IsA("BasePart") then

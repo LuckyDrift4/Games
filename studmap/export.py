@@ -5,7 +5,8 @@ from xml.sax.saxutils import escape
 from .core import Group, hexcol
 
 # Enum.Material values
-MATERIAL = {'plastic': 256, 'smooth': 272, 'neon': 288, 'wood': 512, 'glass': 1568}
+MATERIAL = {'plastic': 256, 'smooth': 272, 'neon': 288, 'wood': 512, 'glass': 1568, 'concrete': 816,
+            'metal': 1088, 'grass': 1280, 'slate': 800, 'fabric': 1312, 'sand': 1296}
 SURF_STUDS, SURF_SMOOTH = 3, 0          # Enum.SurfaceType.Studs / Smooth
 SHAPE = {'ball': 0, 'block': 1, 'cyl': 2}  # Enum.PartType
 
@@ -15,7 +16,23 @@ def _n(x):
     return '0' if s in ('', '-0') else s
 
 
-def _part_xml(p, ref):
+def _children_xml(p, nref):
+    out = []
+    ex = p.extra or {}
+    if ex.get('mesh') == 'sphere':
+        out.append('<Item class="SpecialMesh" referent="RBX%X"><Properties><string name="Name">Mesh</string>'
+                   '<token name="MeshType">3</token></Properties></Item>' % nref())
+    if ex.get('light'):
+        rng, bri, col = ex['light']
+        r, g, b = hexcol(col)
+        out.append('<Item class="PointLight" referent="RBX%X"><Properties><string name="Name">Light</string>'
+                   '<float name="Range">%s</float><float name="Brightness">%s</float><bool name="Shadows">false</bool>'
+                   '<Color3 name="Color"><R>%s</R><G>%s</G><B>%s</B></Color3></Properties></Item>'
+                   % (nref(), _n(rng), _n(bri), _n(r / 255), _n(g / 255), _n(b / 255)))
+    return ''.join(out)
+
+
+def _part_xml(p, ref, nref=None):
     cls = {'wedge': 'WedgePart', 'spawn': 'SpawnLocation'}.get(p.shape, 'Part')
     (x, y, z), R = p.cf.p, p.cf.R
     r, g, b = hexcol(p.color)
@@ -41,7 +58,8 @@ def _part_xml(p, ref):
     if p.shape == 'spawn':
         props.append('<bool name="Neutral">true</bool>')
         props.append('<int name="Duration">0</int>')
-    return '<Item class="%s" referent="RBX%X"><Properties>%s</Properties></Item>' % (cls, ref, ''.join(props))
+    kids = _children_xml(p, nref) if (nref and p.extra) else ''
+    return '<Item class="%s" referent="RBX%X"><Properties>%s</Properties>%s</Item>' % (cls, ref, ''.join(props), kids)
 
 
 def write_rbxmx(path, root: Group):
@@ -63,7 +81,7 @@ def write_rbxmx(path, root: Group):
             if isinstance(c, Group):
                 walk(c)
             else:
-                out.append(_part_xml(c, nref()))
+                out.append(_part_xml(c, nref(), nref))
                 count[0] += 1
         out.append('</Item>')
 
@@ -78,7 +96,8 @@ def write_preview_json(path, root: Group, views, scene=None):
     parts = []
     for p in root.parts():
         (x, y, z), R = p.cf.p, p.cf.R
-        parts.append([p.shape, [round(s, 4) for s in p.size],
+        shape = 'ball' if (p.extra or {}).get('mesh') == 'sphere' else p.shape
+        parts.append([shape, [round(s, 4) for s in p.size],
                       [round(v, 4) for v in (x, y, z, R[0][0], R[0][1], R[0][2], R[1][0], R[1][1], R[1][2],
                                              R[2][0], R[2][1], R[2][2])],
                       p.color, 1 if p.studs else 0, p.mat, round(p.tr, 3)])

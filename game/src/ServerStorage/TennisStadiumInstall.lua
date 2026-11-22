@@ -1,4 +1,5 @@
--- Puts the Blender-made stadium (out/tennis_stadium_blender) into the place.
+-- OPTIONAL upgrade: the place already contains the stadium built from Parts (workspace.TennisStadiumParts). This swaps
+-- it for the Blender meshes (out/tennis_stadium_blender), which are smoother but have to be imported first.
 --
 -- In Studio: File > Import 3D, select every .glb in the stadium's kit/ and static/ folders plus AxisProbe.glb, import.
 -- Then in the command bar (View > Command Bar):   require(game.ServerStorage.TennisStadiumInstall).Install()
@@ -111,6 +112,10 @@ function M.Install()
 	local fallback = world and world:FindFirstChild("Fallback")
 	if fallback then
 		fallback:Destroy()
+	end
+	local partsStadium = workspace:FindFirstChild("TennisStadiumParts")    -- the built-in Parts version
+	if partsStadium then
+		partsStadium:Destroy()
 	end
 	print(string.format("[TennisStadium] built: %d kit models (%d moved), yaw fix %d, %d collision shapes set",
 		#kit:GetChildren(), moved, S.YAW_FIX, prepped))

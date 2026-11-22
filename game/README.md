@@ -2,7 +2,7 @@
 
 A Roblox tennis game for classic R6 avatars. You can play singles against a Noob Bot or 1v1 against another player in a stadium styled after a big hard-court final (no real brands or logos). Every swing, serve and celebration was made for R6 and previewed in Blender.
 
-**Open it:** `out/tennis_game/TennisR6.rbxl` opens in Roblox Studio, then press Play. To add the Blender-made stadium, follow `out/tennis_stadium_blender/SETUP.md`: import the models, then paste one line in the command bar. Before you publish, check that *Game Settings → Avatar* is set to **R6**. The place file already saves R6, but a published game uses its own setting.
+**Open it:** double-click `out/tennis_game/TennisR6.rbxl` and press Play in Roblox Studio. The whole stadium is already inside: it's the Blender design rebuilt from about 17,800 Parts, so there's nothing to import. Optionally, `out/tennis_stadium_blender/SETUP.md` swaps it for the smoother Blender meshes. Before you publish, check that *Game Settings → Avatar* is set to **R6**. The place file already saves R6, but a published game uses its own setting.
 
 ## How to play
 

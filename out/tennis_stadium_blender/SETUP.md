@@ -2,7 +2,7 @@
 
 The stadium was modelled in Blender: stands with about 3,800 fans, curved corners, a roof ring with floodlights, the court with a see-through net, the umpire chair and players' benches, hanging video screens, the plaza with its fountain, kiosks, lamps and planters, two outer courts with fences and bleachers, and trees. It's 264k triangles across 44 reusable models.
 
-`out/tennis_game/TennisR6.rbxl` already has the game parts and plain fallback floors, so it plays even before the stadium is imported. These steps add the real stadium.
+**You don't need this to play.** `out/tennis_game/TennisR6.rbxl` already contains this stadium rebuilt from Roblox Parts (`out/tennis_stadium_parts`), so just open it and press Play. These steps are an optional upgrade that swaps in the Blender meshes, which are smoother and have more detail.
 
 ## Steps (about 2 minutes)
 

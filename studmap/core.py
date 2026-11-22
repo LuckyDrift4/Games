@@ -84,19 +84,22 @@ def shade(h, k):
 
 
 class Part:
-    """one Roblox part. shape: block | wedge | cyl | ball | spawn. mat: plastic (studs) | smooth | neon | glass | wood"""
-    __slots__ = ('name', 'size', 'cf', 'color', 'shape', 'mat', 'studs', 'tr', 'collide', 'shadow')
+    """one Roblox part. shape: block | wedge | cyl | ball | spawn. mat: plastic (studs) | smooth | neon | glass | wood
+    | concrete | metal | grass | slate | fabric | sand. extra: optional children, e.g. {'mesh': 'sphere'} (an ellipsoid
+    SpecialMesh filling the part) or {'light': (range, brightness, '#rrggbb')} (a PointLight)"""
+    __slots__ = ('name', 'size', 'cf', 'color', 'shape', 'mat', 'studs', 'tr', 'collide', 'shadow', 'extra')
 
     def __init__(self, name, size, cframe, color, shape='block', mat='plastic', studs=None, tr=0.0, collide=True,
-                 shadow=True):
+                 shadow=True, extra=None):
         self.name, self.size, self.cf, self.color, self.shape = name, tuple(float(s) for s in size), cframe, color, shape
         self.mat = mat
         self.studs = (mat == 'plastic' and shape in ('block', 'wedge', 'spawn')) if studs is None else studs
         self.tr, self.collide, self.shadow = tr, collide, shadow
+        self.extra = extra
 
     def moved(self, c):
         return Part(self.name, self.size, c * self.cf, self.color, self.shape, self.mat, self.studs, self.tr,
-                    self.collide, self.shadow)
+                    self.collide, self.shadow, self.extra)
 
 
 class Prop:

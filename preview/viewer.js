@@ -126,8 +126,8 @@ function addCyl(acc, s, T, col, seg = 20) {       // axis along local X
 }
 
 function addBall(acc, s, T, col) {
-  const r = s[0] / 2, nu = 16, nv = 10;
-  const P = (i, j) => { const u = i / nu * Math.PI * 2, v = j / nv * Math.PI; return [Math.sin(v) * Math.cos(u) * r, Math.cos(v) * r, Math.sin(v) * Math.sin(u) * r]; };
+  const rx = s[0] / 2, ry = s[1] / 2, rz = s[2] / 2, nu = 16, nv = 10;
+  const P = (i, j) => { const u = i / nu * Math.PI * 2, v = j / nv * Math.PI; return [Math.sin(v) * Math.cos(u) * rx, Math.cos(v) * ry, Math.sin(v) * Math.sin(u) * rz]; };
   for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
     const a = P(i, j), b = P(i + 1, j), c = P(i + 1, j + 1), d = P(i, j + 1);
     const m = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2, (a[2] + c[2]) / 2];
