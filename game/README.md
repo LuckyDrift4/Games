@@ -2,7 +2,7 @@
 
 A Roblox tennis game for classic R6 avatars. You can play singles against a Noob Bot or 1v1 against another player in a stadium styled after a big hard-court final (no real brands or logos). Every swing, serve and celebration was made for R6 and previewed in Blender.
 
-**Open it:** `out/tennis_game/TennisR6.rbxl` opens in Roblox Studio, then press Play. Before you publish, check that *Game Settings → Avatar* is set to **R6**. The place file already saves R6, but a published game uses its own setting.
+**Open it:** `out/tennis_game/TennisR6.rbxl` opens in Roblox Studio, then press Play. To add the Blender-made stadium, follow `out/tennis_stadium_blender/SETUP.md`: import the models, then paste one line in the command bar. Before you publish, check that *Game Settings → Avatar* is set to **R6**. The place file already saves R6, but a published game uses its own setting.
 
 ## How to play
 
@@ -15,7 +15,11 @@ A Roblox tennis game for classic R6 avatars. You can play singles against a Noob
 - **Serving:** press HIT to toss the ball, then press it again when the ball reaches the top of the toss. The meter's green zone means a perfect serve and yellow means a good one. Anything else is a fault, and two faults lose the point.
 - **Rallies:** the game picks the shot for you: forehand or backhand by side, a volley near the net, a smash on high balls. Pressing early pulls the ball cross-court, and a cleaner hit sends it deeper and faster.
 - **Scoring:** a game is first to 7 points and a match is first to 3 games.
-- **Coins:** 1 per point won, plus 25 for beating the bot (5 for losing) or 40 for winning a 1v1 (10 for losing). Spend them in the **SHOP** on racket colours.
+- **Cash:** $1 per point won, plus $25 for beating the bot ($5 for losing) or $40 for winning a 1v1 ($10 for losing). Spend it in the **SHOP** on racket colours.
+
+## Icons
+
+The HUD uses icons from the FOLK icon pack: cash, shop cart, trophy, crown, close, back, and the SPACE / X keys. A Roblox game can only show uploaded images, so the place has a folder `ReplicatedStorage.TennisIcons` with one ImageLabel per icon. In Studio, click each one, then click its **Image** property and pick the matching file from the `TennisIcons` folder (each label's **File** attribute names it). Until an icon is set, the HUD draws a simple shape instead. The icon images aren't in this repository.
 
 ## How it's built
 
@@ -23,14 +27,15 @@ A Roblox tennis game for classic R6 avatars. You can play singles against a Noob
 - `src/ReplicatedStorage/Tennis`: shared code. `Config` holds every number, `BallPhysics` gives exact ball flight split at each bounce, `Court` holds the rules and court geometry, `RigAnimator` plays the clips by writing `Motor6D.Transform` (nothing to upload), and `Rigs` builds the racket and the Noob Bot.
 - `src/ServerScriptService/TennisServer`: courts and pads, `Match` (serve, faults, net, in/out, scoring, the bot, rewards) and `Data` (coins, wins and rackets, saved with DataStore).
 - `src/StarterPlayer/StarterPlayerScripts/TennisClient`: draws the ball, animates every player on court, runs the TV camera, handles input, and builds the HUD and shop (`UI.lua`).
-- `tools/build_place.luau`: assembles the place (map, scripts, lighting, the R6 setting, plus an animation rig with KeyframeSequences in ServerStorage for the Animation Editor).
+- `src/ServerStorage/TennisStadiumInstall.lua`: builds the Blender stadium from the imported models (and removes the fallback floors).
+- `tools/build_place.luau`: assembles the place (game parts from `maps/tennis_gameplay.py`, scripts, lighting, the R6 setting, the icon slots, plus an animation rig with KeyframeSequences in ServerStorage for the Animation Editor).
 - `tests/`: Luau tests run with [Lune](https://github.com/lune-org/lune): `lune run test_physics.luau`, `lune run test_anim.luau`, `lune run syntax.luau`.
 
 Rebuild everything:
 
 ```
 python3 game/anim/export.py                       # animations -> AnimData.lua + build/anims.json
-python3 tools/build.py tennis_stadium --render    # stadium map -> out/tennis_stadium
+python3 tools/build.py tennis_gameplay            # game parts + fallback floors -> out/tennis_gameplay
 cd game/tools && lune run build_place.luau        # -> out/tennis_game/TennisR6.rbxl
 python game/anim/preview_blender.py               # Blender previews (needs the bpy module)
 ```

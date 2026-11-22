@@ -303,7 +303,7 @@ def aim(cam, loc, target, lens):
 
 # Blender: the character faces +Y, its right is +X, the floor is z = 0
 VIEWS = {
-    'front': ((7.5, 10.5, 4.6), (0.4, 0.6, 2.6), 46),       # front-right three-quarter
+    'front': ((8.6, 11.8, 4.9), (0.5, 0.8, 2.5), 44),       # front-right three-quarter
     'game': ((-1.0, -12.5, 7.2), (0.2, 3.0, 2.6), 36),      # the in-game camera behind the player
     'side': ((12.0, 0.5, 3.4), (0, 0.5, 2.7), 46),
     'back': ((-7.0, -8.5, 4.8), (0, 0.6, 2.6), 46),

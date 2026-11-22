@@ -37,22 +37,25 @@ def k(t, p, **opts):
 FAR = 40   # "far away toward the net"
 
 READY = pose(
-    root=dict(lean=16, turn=0),
-    rf=(1.45, 0.3, 0, 14), lf=(-1.5, 0.6, 0, 14),
-    rh=(0.1, -0.8, 1.15),
-    lh=('racket', 0.75),
-    rk=((-0.3, 0.75, 1.0), (1, 0, 0.1)),
+    root=dict(lean=14, turn=0),
+    rf=(1.3, 0.25, 0, 12), lf=(-1.3, 0.45, 0, 12),
+    rh=(0.95, -0.7, 1.45),
+    lh=(-1.2, -0.85, 1.25),
+    rk=((-0.28, 0.8, 1.0), (1, 0, 0.12)),
     look=(0, 1.2, FAR),
 )
 
 CLIPS = {}
 
 # ---------------------------------------------------------------- locomotion (loops)
-CLIPS['Idle'] = dict(loop=True, priority='Idle', length=1.2, keys=[
+CLIPS['Idle'] = dict(loop=True, priority='Idle', length=1.6, keys=[
     k(0.0, READY),
-    k(0.6, pose(READY, root=dict(lean=18, y=-0.08), rh=(0.12, -0.9, 1.12), rk=((-0.24, 0.66, 1.0), (1, 0, 0.12)),
-                look=(0.5, 1.0, FAR))),
-    k(1.2, READY),
+    k(0.4, pose(READY, root=dict(lean=15, y=-0.12, x=0.06, tilt=1.5), rh=(1.0, -0.8, 1.4), lh=(-1.2, -0.95, 1.2),
+                rk=((-0.22, 0.72, 1.0), (1, 0, 0.12)), look=(0.4, 1.0, FAR))),
+    k(0.8, pose(READY, root=dict(y=0.03))),
+    k(1.2, pose(READY, root=dict(lean=15, y=-0.12, x=-0.06, tilt=-1.5), rh=(0.9, -0.82, 1.42), lh=(-1.25, -0.95, 1.2),
+                rk=((-0.32, 0.74, 1.0), (1, 0, 0.12)), look=(-0.4, 1.0, FAR))),
+    k(1.6, READY),
 ])
 
 
@@ -226,9 +229,9 @@ CROUCH = pose(READY, root=dict(lean=22, y=-0.1), rf=(2.1, 0.3, 0, 16), lf=(-2.1,
               rh=(1.15, -1.25, 0.75), lh=(-1.15, -1.25, 0.75), rk=((0.3, -0.25, 1.0), (1, 0, 0)), look=(0, 0, 12))
 UP = pose(root=dict(lean=-10, y=0), rf=(0.75, 0.15, 1.5, 8), lf=(-0.75, 0.05, 1.3, 8),
           rh=(1.5, 3.5, 0.2), lh=(-1.6, 3.2, 0.35), rk=((0.12, 1.0, 0.08), (0, 0, 1)), look=(0, 4, 10))
-PUMP_DOWN = pose(READY, root=dict(lean=26, y=-0.1), rf=(2.15, 0.3, 0, 16), lf=(-2.15, 0.6, 0, 16),
-                 rh=(1.6, 0.4, 0.5), rk=((0.25, 1.0, 0.1), (0, 0, 1)), lh=(-1.0, -0.55, 0.75), look=(0, -1, 7))
-PUMP_UP = pose(PUMP_DOWN, root=dict(lean=18), lh=(-1.35, 1.1, 1.05), look=(0, 0.5, 8))
+PUMP_DOWN = pose(READY, root=dict(lean=26, y=-0.1, turn=-12), rf=(1.9, 0.3, 0, 16), lf=(-1.9, 0.6, 0, 16),
+                 rh=(2.6, -0.6, 0.2), rk=((0.6, -0.5, 0.6), (0, 0, 1)), lh=(-0.6, -0.65, 1.1), look=(0, -1, 7))
+PUMP_UP = pose(PUMP_DOWN, root=dict(lean=16, turn=-6), lh=(-1.0, 1.35, 1.25), look=(0, 0.8, 8))
 CLIPS['Celebrate'] = dict(loop=False, priority='Action', length=1.6, keys=[
     k(0.00, READY),
     k(0.12, CROUCH),
