@@ -4,10 +4,10 @@
 -- In Studio: File > Import 3D, select every .glb in the stadium's kit/ and static/ folders plus AxisProbe.glb, import.
 -- Then in the command bar (View > Command Bar):   require(game.ServerStorage.TennisStadiumInstall).Install()
 --
--- It gathers the imported models into ServerStorage.TennisStadiumKit, works out which way the importer turned them
--- (AxisProbe), sets each mesh's collision shape, builds workspace.TennisStadium with TennisStadiumSetup, sets the
--- lighting and removes the plain fallback floors. Running it again rebuilds cleanly. If you only import and press
--- Play, the server runs it too (collision shapes can only be changed in Studio, so the command bar is better).
+-- It finds the imported models (by name, or by the names of the parts inside when Studio called them "Scene"),
+-- undoes any import scale, puts every model's pivot back on its file origin (TennisStadiumOffsets), works out which
+-- way the importer turned them (AxisProbe), sets collision shapes, builds workspace.TennisStadium with
+-- TennisStadiumSetup, sets the lighting and removes the Parts stadium and the fallback floors. Safe to run again.
 local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 local AssetService = game:GetService("AssetService")
@@ -18,7 +18,52 @@ local function setup()
 	return require(ServerStorage:WaitForChild("TennisStadiumSetup"))
 end
 
--- move imported models (Workspace or ServerStorage) into ServerStorage.TennisStadiumKit
+local function offsets()
+	local m = ServerStorage:FindFirstChild("TennisStadiumOffsets")
+	return m and require(m) or {}
+end
+
+-- "Stand_w20_0_Node" / "Stand_w20_0.001" -> "Stand_w20_0"
+local function clean(name)
+	name = string.gsub(name, "_Node$", "")
+	name = string.gsub(name, "%.%d+$", "")
+	return name
+end
+
+local function hasMesh(inst)
+	if inst:IsA("MeshPart") then
+		return true
+	end
+	return inst:FindFirstChildWhichIsA("MeshPart", true) ~= nil
+end
+
+-- which stadium model is this? by its own name, or by the parts inside it
+local function identify(inst, want)
+	local own = clean(inst.Name)
+	if want[own] then
+		return own
+	end
+	local list = inst:GetDescendants()
+	table.insert(list, inst)
+	for _, d in list do
+		if d:IsA("BasePart") then
+			local n = clean(d.Name)
+			if want[n] then
+				return n
+			end
+			local base = string.match(n, "^(.-)_Glow_")
+			if base and want[base] then
+				return base
+			end
+			if string.match(n, "^AxisProbe") then
+				return "AxisProbe"
+			end
+		end
+	end
+	return nil
+end
+
+-- move imported models (Workspace or ServerStorage) into ServerStorage.TennisStadiumKit, named after their prop
 function M.Gather()
 	local S = setup()
 	local kit = ServerStorage:FindFirstChild("TennisStadiumKit")
@@ -34,28 +79,89 @@ function M.Gather()
 	local moved = 0
 	for _, where in { workspace, ServerStorage } do
 		for _, c in where:GetChildren() do
-			if c ~= kit and want[c.Name] and (c:IsA("Model") or c:IsA("BasePart")) then
-				local old = kit:FindFirstChild(c.Name)
-				if old and old ~= c then
-					old:Destroy()
+			if c ~= kit and (c:IsA("Model") or c:IsA("MeshPart")) and hasMesh(c) then
+				local prop = identify(c, want)
+				if prop then
+					for _, d in c:GetDescendants() do
+						if d:IsA("BasePart") then
+							d.Name = clean(d.Name)
+						end
+					end
+					local old = kit:FindFirstChild(prop)
+					if old and old ~= c then
+						old:Destroy()
+					end
+					c.Name = prop
+					c.Parent = kit
+					moved += 1
 				end
-				c.Parent = kit
-				moved += 1
 			end
 		end
 	end
 	return kit, moved
 end
 
--- the importer may turn models half a turn; the AxisProbe's red cube sits on +X when it did not
+local function mainPart(model, prop)
+	if model:IsA("BasePart") then
+		return model
+	end
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") and d.Name == prop then
+			return d
+		end
+	end
+	return model:FindFirstChildWhichIsA("BasePart", true)
+end
+
+-- the importer may turn models half a turn: the AxisProbe's +X cube tells which way
 function M.DetectYaw(kit)
 	local probe = kit:FindFirstChild("AxisProbe")
-	local cube = probe and probe:FindFirstChild("AxisProbe_PlusX", true)
-	if not (probe and cube and cube:IsA("BasePart")) then
+	if not probe then
 		return nil
 	end
-	local rel = probe:GetPivot():PointToObjectSpace(cube.Position)
-	return rel.X >= 0 and 0 or 180
+	local arrow, cube
+	for _, d in probe:GetDescendants() do
+		if d:IsA("BasePart") then
+			if d.Name == "AxisProbe" then
+				arrow = d
+			elseif d.Name == "AxisProbe_PlusX" then
+				cube = d
+			end
+		end
+	end
+	if not (arrow and cube) then
+		return nil
+	end
+	-- in the file the cube sits at -X (glTF faces +Z); if it is still there, the importer kept the file's axes
+	return (cube.Position.X - arrow.Position.X) < 0 and 180 or 0
+end
+
+-- every kit model: right scale, pivot on its file origin
+function M.FixPivots(kit, yaw)
+	local OFF = offsets()
+	local fixed = 0
+	for _, model in kit:GetChildren() do
+		local o = OFF[model.Name]
+		local part = o and mainPart(model, model.Name)
+		if o and part then
+			local ratio = part.Size.Magnitude / o.size.Magnitude
+			if model:IsA("Model") and math.abs(ratio - 1) > 0.03 then
+				model:ScaleTo(model:GetScale() / ratio)
+			end
+			local c = o.c
+			if yaw == 0 then
+				c = Vector3.new(-c.X, c.Y, -c.Z) -- the importer already turned the file's axes into Roblox's
+			end
+			local origin = CFrame.new(part.Position - c)
+			if model:IsA("Model") then
+				model.WorldPivot = origin
+			else
+				model.PivotOffset = part.CFrame:ToObjectSpace(origin)
+			end
+			fixed += 1
+		end
+	end
+	return fixed
 end
 
 -- collision shapes per prop (only possible in Studio, not in a running game)
@@ -70,7 +176,9 @@ function M.PrepCollision(kit)
 	local done = 0
 	for _, model in kit:GetChildren() do
 		local kind = S.Collision[model.Name] or "hull"
-		for _, p in model:GetDescendants() do
+		local list = model:GetDescendants()
+		table.insert(list, model)
+		for _, p in list do
 			if p:IsA("MeshPart") then
 				local want = string.find(p.Name, "_Glow_") and Enum.CollisionFidelity.Box or FID[kind]
 				if p.CollisionFidelity ~= want and not pcall(function()
@@ -102,6 +210,7 @@ function M.Install()
 	if yaw then
 		S.YAW_FIX = yaw
 	end
+	local pivots = M.FixPivots(kit, S.YAW_FIX)
 	local prepped = 0
 	if RunService:IsEdit() then
 		prepped = M.PrepCollision(kit)
@@ -113,12 +222,19 @@ function M.Install()
 	if fallback then
 		fallback:Destroy()
 	end
-	local partsStadium = workspace:FindFirstChild("TennisStadiumParts")    -- the built-in Parts version
+	local partsStadium = workspace:FindFirstChild("TennisStadiumParts") -- the built-in Parts version
 	if partsStadium then
 		partsStadium:Destroy()
 	end
-	print(string.format("[TennisStadium] built: %d kit models (%d moved), yaw fix %d, %d collision shapes set",
-		#kit:GetChildren(), moved, S.YAW_FIX, prepped))
+	local missing = {}
+	for _, n in S.Props do
+		if not kit:FindFirstChild(n) then
+			table.insert(missing, n)
+		end
+	end
+	print(string.format("[TennisStadium] built: %d models (%d gathered, %d pivots fixed), yaw fix %d, %d collision shapes set%s",
+		#kit:GetChildren(), moved, pivots, S.YAW_FIX, prepped,
+		#missing > 0 and (", MISSING: " .. table.concat(missing, ", ")) or ""))
 	return root
 end
 
