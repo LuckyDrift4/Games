@@ -129,6 +129,7 @@ class Mesh:
         me.update()
         if smooth:
             me.shade_smooth()
+            me.set_sharp_from_angle(angle=math.radians(40))   # keeps tape steps / beam edges crisp (no shading artefacts)
         me.materials.append(MATS[mat])
         o = bpy.data.objects.new(name, me)
         (coll or RACKET).objects.link(o)
@@ -490,10 +491,10 @@ def studio():
 def shot(name, cam_loc, target, lens, pose, ball=None, dof=None, res=(1600, 1000)):
     sc = bpy.context.scene
     ROOT_EMPTY.matrix_world = pose
+    for o in [BALL] + list(BALL.children):
+        o.hide_render = ball is None
     if ball is not None:
-        BALL.hide_render = False; BALL.location = ball
-    else:
-        BALL.hide_render = True
+        BALL.location = ball
     cam = bpy.data.objects.get('Cam') or bpy.data.objects.new('Cam', bpy.data.cameras.new('Cam'))
     if cam.name not in sc.collection.objects:
         sc.collection.objects.link(cam)
