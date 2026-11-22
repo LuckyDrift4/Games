@@ -8,6 +8,18 @@ Three original Roblox maps built from plain Parts by a small Python generator (`
 | **Sky Sprint**: floating islands with a hub and a long runway through Meadow, Golden Fields and Frost zones | studs | 2,881 | `out/sky_sprint/SkySprint.rbxmx` |
 | **Plot Isles**: 8 identical plot islands on a main road in a see-through tropical sea. Each plot has a laser-lock gate, an owner board, 8 pedestal pads with collect buttons, a conveyor with a spawn portal and exit tunnel, tiki torches, palms and beach props. The spawn hub has a lighthouse, coin fountain, Shop / Index / Rebirth huts and leaderboards | studs + smooth props | 14,659 | `out/plot_isles/PlotIsles.rbxmx` |
 
+### Plot Isles, Blender version
+
+The same Plot Isles layout, modelled in Blender: bevelled meshes, rounded sandy islands, curved palms and hip-roof huts.
+It is exported as 96 prop models plus 4 ground pieces, with a generated setup script that places 890 props. It has
+404,844 triangles and passed the exporter's budget, clipping, floating, water and collision checks. To import it, see
+[`out/plot_isles_blender/SETUP.md`](out/plot_isles_blender/SETUP.md).
+
+![Plot Isles (Blender)](out/plot_isles_blender/previews/map_overview.jpg)
+
+The scripts that build this version are not in this repo: they use a privately licensed Blender skill. Only the
+generated maps, models and scripts are here.
+
 ![Harvest Hollow](out/harvest_hollow/previews/overview.jpg)
 ![Sky Sprint](out/sky_sprint/previews/overview.jpg)
 ![Plot Isles](out/plot_isles/previews/overview.jpg)
